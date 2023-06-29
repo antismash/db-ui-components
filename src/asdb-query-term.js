@@ -27,9 +27,11 @@ export class AsdbQueryTerm extends LitElement {
     constructor() {
         super();
         this.terms = {
-            term_type: "expr",
+            termType: "expr",
             category: "",
-            term: "",
+            value: "",
+            filters: [],
+            count: 1,
         };
     }
 
@@ -167,20 +169,22 @@ export class AsdbQueryTerm extends LitElement {
     }
 
     formTermChanged(ev) {
-        this.terms.term = ev.target.value;
+        this.terms.value = ev.target.value;
         this.termChanged();
         this.requestUpdate();
     }
 
     addTerm() {
         this.terms = {
-            term_type: "op",
+            termType: "op",
             operation: "AND",
             left: this.terms,
             right: {
-                term_type: "expr",
+                termType: "expr",
                 category: "",
-                term: "",
+                value: "",
+                filters: [],
+                count: 1,
             },
         };
         this.termChanged();
@@ -258,7 +262,7 @@ export class AsdbQueryTerm extends LitElement {
     }
 
     renderTerm() {
-        return html`<input type="text" class="expression" placeholder="${this.terms.category == ""?"Select placeholder":""}" ?disabled="${this.terms.category == ""}" .value="${this.terms.term}" @change=${this.formTermChanged}>`;
+        return html`<input type="text" class="expression" placeholder="${this.terms.category == ""?"Select placeholder":""}" ?disabled="${this.terms.category == ""}" .value="${this.terms.value}" @change=${this.formTermChanged}>`;
     }
 
     renderExpression() {
@@ -273,7 +277,7 @@ export class AsdbQueryTerm extends LitElement {
     renderOp() {
         return html`
         <ul class="operation-group">
-            <li class="term"><asdb-query-term .terms="${this.terms.left}" @term-changed="${this.changedTermLeft}" .categories="${this.categories}"></asdb-query-term> ${this.terms.left.term_type == "expr"?html`<button class="remove" @click="${this.removeLeft}"><svg class="icon"><use xlink:href="/images/icons.svg#trash"></use></svg> Remove term</button>`:html``}</li>
+            <li class="term"><asdb-query-term .terms="${this.terms.left}" @term-changed="${this.changedTermLeft}" .categories="${this.categories}"></asdb-query-term> ${this.terms.left.termType == "expr"?html`<button class="remove" @click="${this.removeLeft}"><svg class="icon"><use xlink:href="/images/icons.svg#trash"></use></svg> Remove term</button>`:html``}</li>
             <li class="operation">
                 <div class="button-group">
                     <label @click="${() => this.changeOperation("AND")}" class="btn ${this.terms.operation == "AND"?"active":""}">AND</label>
@@ -281,7 +285,7 @@ export class AsdbQueryTerm extends LitElement {
                     <label @click="${() => this.changeOperation("EXCEPT")}" class="btn ${this.terms.operation == "EXCEPT"?"active":""}">EXCEPT</btn></div>
                 <button @click="${this.swap}"><svg class="icon"><use xlink:href="/images/icons.svg#exchange"></use></svg> Swap terms</button>
             </li>
-            <li class="term"><asdb-query-term .terms="${this.terms.right}" @term-changed="${this.changedTermRight}" .categories="${this.categories}"></asdb-query-term>${this.terms.right.term_type == "expr"?html`<button class="remove" @click="${this.removeRight}"><svg class="icon"><use xlink:href="/images/icons.svg#trash"></use></svg> Remove term</button>`:html``}</li>
+            <li class="term"><asdb-query-term .terms="${this.terms.right}" @term-changed="${this.changedTermRight}" .categories="${this.categories}"></asdb-query-term>${this.terms.right.termType == "expr"?html`<button class="remove" @click="${this.removeRight}"><svg class="icon"><use xlink:href="/images/icons.svg#trash"></use></svg> Remove term</button>`:html``}</li>
         </ul>
         `;
     }
@@ -290,7 +294,7 @@ export class AsdbQueryTerm extends LitElement {
         return html`
             <div>
                 ${this.terms?
-                    this.terms.term_type == "expr"?
+                    this.terms.termType == "expr"?
                     this.renderExpression():
                     this.renderOp()
                   :html`Loading...`}

@@ -200,19 +200,24 @@ export class AsdbQueryBuilder extends LitElement {
 
     loadExample() {
         this.query.terms = {
-            term_type: "op",
+            termType: "op",
             operation: "AND",
             left: {
-                term_type: "expr",
+                termType: "expr",
                 category: "type",
-                term: "nrps",
+                value: "nrps",
+                filters: [],
+                count: 1,
             },
             right: {
-                term_type: "expr",
+                termType: "expr",
                 category: "genus",
-                term: "streptomyces",
+                value: "streptomyces",
+                filters: [],
+                count: 1,
             },
         };
+
         this.searchChanged();
         this.requestUpdate();
     }
@@ -487,9 +492,11 @@ export class AsdbQueryBuilder extends LitElement {
         } else {
             this.query = {
                 terms: {
-                    term_type: "expr",
+                    termType: "expr",
                     category: "",
-                    term: "",
+                    value: "",
+                    filters: [],
+                    count: 1,
                 },
                 search: 'cluster',
                 return_type: 'json',
@@ -504,11 +511,11 @@ function stringifyTerm(term) {
     if (!term) {
         return "INVALID";
     }
-    if (term.term_type == "expr") {
-        if (!term.category || !term.term) {
+    if (term.termType == "expr") {
+        if (!term.category || !term.value) {
             return "";
         }
-        return `[${term.category}]${term.term}`;
+        return `{[${term.category}|${term.value}]}`;
     }
     return `( ${stringifyTerm(term.left)} ${term.operation} ${stringifyTerm(term.right)} )`;
 }
