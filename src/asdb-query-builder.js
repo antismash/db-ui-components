@@ -548,7 +548,10 @@ function stringifyTerm(term) {
         if (!term.category || !term.value) {
             return "";
         }
-        return `{[${term.category}|${term.value}]}`;
+        return `{[${term.category}|${term.value}]${term.filters?.map((filter)=> {
+            return ` WITH [${filter.name}|${filter.operator ? `${filter.operator}:`: ""}${filter.operand}]`
+        })}}`;
+
     }
     return `( ${stringifyTerm(term.left)} ${term.operation} ${stringifyTerm(term.right)} )`;
 }
