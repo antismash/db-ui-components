@@ -280,9 +280,9 @@ export class AsdbQueryTerm extends LitElement {
             <li class="term"><asdb-query-term .terms="${this.terms.left}" @term-changed="${this.changedTermLeft}" .categories="${this.categories}"></asdb-query-term> ${this.terms.left.termType == "expr"?html`<button class="remove" @click="${this.removeLeft}"><svg class="icon"><use xlink:href="/images/icons.svg#trash"></use></svg> Remove term</button>`:html``}</li>
             <li class="operation">
                 <div class="button-group">
-                    <label @click="${() => this.changeOperation("AND")}" class="btn ${this.terms.operation == "AND"?"active":""}">AND</label>
-                    <label @click="${() => this.changeOperation("OR")}" class="btn ${this.terms.operation == "OR"?"active":""}">OR</label>
-                    <label @click="${() => this.changeOperation("EXCEPT")}" class="btn ${this.terms.operation == "EXCEPT"?"active":""}">EXCEPT</btn></div>
+                    <label @click="${() => this.changeOperation("AND")}" class="btn ${this.terms.operation.toLowerCase() == "and"?"active":""}">AND</label>
+                    <label @click="${() => this.changeOperation("OR")}" class="btn ${this.terms.operation.toLowerCase() == "or"?"active":""}">OR</label>
+                    <label @click="${() => this.changeOperation("EXCEPT")}" class="btn ${this.terms.operation.toLowerCase() == "except"?"active":""}">EXCEPT</btn></div>
                 <button @click="${this.swap}"><svg class="icon"><use xlink:href="/images/icons.svg#exchange"></use></svg> Swap terms</button>
             </li>
             <li class="term"><asdb-query-term .terms="${this.terms.right}" @term-changed="${this.changedTermRight}" .categories="${this.categories}"></asdb-query-term>${this.terms.right.termType == "expr"?html`<button class="remove" @click="${this.removeRight}"><svg class="icon"><use xlink:href="/images/icons.svg#trash"></use></svg> Remove term</button>`:html``}</li>
