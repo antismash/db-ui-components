@@ -544,14 +544,32 @@ function stringifyTerm(term) {
     if (!term) {
         return "INVALID";
     }
-    if (term.termType == "expr") {
-        if (!term.category || !term.value) {
-            return "";
-        }
-        return `{[${term.category}|${term.value}]${term.filters?.map((filter)=> {
-            return ` WITH [${filter.name}|${filter.operator ? `${filter.operator}:`: ""}${filter.operand}]`
-        })}}`;
+    if (term.termType == "op") {
+        let left_stringify = stringifyTerm(term.left);
+        let right_stringify = stringifyTerm(term.right);
 
+        if (!left_stringify) {
+            return right_stringify;
+        }
+
+        if (!right_stringify) {
+            return left_stringify;
+        }
+
+        return `( ${left_stringify} ${term.operation} ${right_stringify} )`;
     }
-    return `( ${stringifyTerm(term.left)} ${term.operation} ${stringifyTerm(term.right)} )`;
+
+
+    if (!term.category){
+        return "";
+    }
+
+    if (!term.value) {
+        return `{[${term.category}]}`;
+    }
+
+    return `{[${term.category}|${term.value}]${term.filters?.map((filter)=> {
+        return ` WITH [${filter.name}|${filter.operator ? `${filter.operator}:`: ""}${filter.operand}]`
+    })}}`;
+
 }
