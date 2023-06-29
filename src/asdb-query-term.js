@@ -14,6 +14,13 @@ export class AsdbQueryTerm extends LitElement {
                     return JSON.stringify(newVal) !== JSON.stringify(oldVal);
                 },
             },
+            categories: {
+                type: Object,
+                reflect: true,
+                hasChanged: (newVal, oldVal) => {
+                    return JSON.stringify(newVal) !== JSON.stringify(oldVal);
+                },
+            },
         };
     }
 
@@ -222,40 +229,32 @@ export class AsdbQueryTerm extends LitElement {
     renderType() {
         return html`
         <select .value="${this.terms.category}" @change=${this.formCategoryChanged}>
-            <option label="--- Select a category ---" value="" selected="selected">--- Select a category</option>
-            <option label="NCBI RefSeq Accession" value="acc">NCBI RefSeq Accession</option>
-            <option label="NCBI assembly ID" value="assembly">NCBI assembly ID</option>
-            <optgroup label="antiSMASH predictions">
-                <option label="BGC type" value="type">BGC type</option>
-                <option label="Monomer" value="monomer">Monomer</option>
-                <option label="Biosynthetic profile" value="profile">Biosynthetic profile</option>
-                <option label="NRPS/PKS domain" value="asdomain">NRPS/PKS domain</option>
-                <option label="smCoG hit" value="smcog">smCoG hit</option>
-            </optgroup>
-            <optgroup label="Compound properties">
-                <option label="Compound sequence" value="compoundseq">Compound sequence</option>
-                <option label="RiPP Compound class" value="compoundclass">RiPP Compound class</option>
-            </optgroup>
-            <optgroup label="Quality filters">
-                <option label="Cluster on contig edge" value="contigedge">Cluster on contig edge</option>
-                <option label="Cluster with minimal predictions" value="minimal">Cluster with minimal predictions</option>
-            </optgroup>
-            <optgroup label="Taxonomy">
-                <option label="Strain" value="strain">Strain</option>
-                <option label="Species" value="species">Species</option>
-                <option label="Genus" value="genus">Genus</option>
-                <option label="Family" value="family">Family</option>
-                <option label="Order" value="order">Order</option>
-                <option label="Class" value="class">Class</option>
-                <option label="Phylum" value="phylum">Phylum</option>
-                <option label="Superkingdom" value="superkingdom">Superkingdom</option>
-            </optgroup>
-            <optgroup label="Similar clusters">
-                <option label="ClusterBlast hit" value="clusterblast">ClusterBlast hit</option>
-                <option label="KnownClusterBlast hit" value="knowncluster">KnownClusterBlast hit</option>
-                <option label="SubClusterBlast hit" value="subcluster">SubClusterBlast hit</option>
-            </optgroup>
+            <option label="--- Select a category ---" value="">--- Select a category</option>
+            ${this.renderPlainOptions(this.categories.order)}
+            ${this.renderOptionGroups()}
         </select>`;
+    }
+
+    renderOption(option) {
+        return html`<option .label="${option.label}" .value="${option.value}" ?selected=${option.value == this.terms.category}>${option.label}</option>`;
+    }
+
+    renderPlainOptions(group) {
+        if (!group) {
+            return html``;
+        }
+        return html`${group.options.map((option) =>
+            this.renderOption(option)
+        )}`;
+    }
+
+    renderOptionGroups() {
+        if (!this.categories) {
+            return html``;
+        }
+        return html`${this.categories.order.groups.map((group) =>
+            html`<optgroup label="${group.header}">${this.renderPlainOptions(group)}</optgroup>`
+        )}`
     }
 
     renderTerm() {
@@ -274,7 +273,7 @@ export class AsdbQueryTerm extends LitElement {
     renderOp() {
         return html`
         <ul class="operation-group">
-            <li class="term"><asdb-query-term .terms="${this.terms.left}" @term-changed="${this.changedTermLeft}"></asdb-query-term> ${this.terms.left.term_type == "expr"?html`<button class="remove" @click="${this.removeLeft}"><svg class="icon"><use xlink:href="/images/icons.svg#trash"></use></svg> Remove term</button>`:html``}</li>
+            <li class="term"><asdb-query-term .terms="${this.terms.left}" @term-changed="${this.changedTermLeft}" .categories="${this.categories}"></asdb-query-term> ${this.terms.left.term_type == "expr"?html`<button class="remove" @click="${this.removeLeft}"><svg class="icon"><use xlink:href="/images/icons.svg#trash"></use></svg> Remove term</button>`:html``}</li>
             <li class="operation">
                 <div class="button-group">
                     <label @click="${() => this.changeOperation("AND")}" class="btn ${this.terms.operation == "AND"?"active":""}">AND</label>
@@ -282,7 +281,7 @@ export class AsdbQueryTerm extends LitElement {
                     <label @click="${() => this.changeOperation("EXCEPT")}" class="btn ${this.terms.operation == "EXCEPT"?"active":""}">EXCEPT</btn></div>
                 <button @click="${this.swap}"><svg class="icon"><use xlink:href="/images/icons.svg#exchange"></use></svg> Swap terms</button>
             </li>
-            <li class="term"><asdb-query-term .terms="${this.terms.right}" @term-changed="${this.changedTermRight}"></asdb-query-term>${this.terms.right.term_type == "expr"?html`<button class="remove" @click="${this.removeRight}"><svg class="icon"><use xlink:href="/images/icons.svg#trash"></use></svg> Remove term</button>`:html``}</li>
+            <li class="term"><asdb-query-term .terms="${this.terms.right}" @term-changed="${this.changedTermRight}" .categories="${this.categories}"></asdb-query-term>${this.terms.right.term_type == "expr"?html`<button class="remove" @click="${this.removeRight}"><svg class="icon"><use xlink:href="/images/icons.svg#trash"></use></svg> Remove term</button>`:html``}</li>
         </ul>
         `;
     }

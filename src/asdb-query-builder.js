@@ -55,6 +55,12 @@ export class AsdbQueryBuilder extends LitElement {
     @internalProperty()
     downloadReturnTypes = new Set(['csv', 'fasta', 'fastaa']);
 
+    @internalProperty({type: Object})
+    categories = {
+        order: null,
+        mappings: {},
+    };
+
     static get styles() {
         return css`
         .hidden {
@@ -360,7 +366,7 @@ export class AsdbQueryBuilder extends LitElement {
                 <div class="search-options">
                     <label class="form-control">Search:</label>
                     <div class="btn-group">
-                        ${this.searchTypes.map(stype => 
+                        ${this.searchTypes.map(stype =>
                             html`<label @click="${() => this.searchTypeChanged(stype.id)}" class="btn btn-info${this.query && this.query.search == stype.id?" active":""}">${stype.desc}</label>`)}
                     </div>
                 </div>
@@ -377,7 +383,7 @@ export class AsdbQueryBuilder extends LitElement {
                 </div>
 
             </div>
-            ${this.query?html`<asdb-query-term .terms="${this.query.terms}" @term-changed="${this.termsChanged}"></asdb-query-term>`:html`Loading...`}
+            ${this.query?html`<asdb-query-term .terms="${this.query.terms}" @term-changed="${this.termsChanged}" .categories="${this.categories}"></asdb-query-term>`:html`Loading...`}
             <div class="${this.query && this.downloadReturnTypes.has(this.query.return_type) ? '': 'hidden'}">
                 <div class="pagination-options">
                     <div class="paginate">
@@ -442,6 +448,21 @@ export class AsdbQueryBuilder extends LitElement {
         }
         if (isNaN(paginate)) {
             paginate = this.paginate;
+        }
+
+        let categoriesUrl = new URL("/api/v1.0/available_categories", window.location);
+        let category_data = await fetch(categoriesUrl);
+        this.categories.order = await category_data.json();
+        for (let i in this.categories.order.options) {
+            let option = this.categories.order.options[i];
+            this.categories.mappings[option.value] = {type: option.type, filters: option.filters};
+        }
+        for (let i in this.categories.order.groups) {
+            let group = this.categories.order.groups[i];
+            for (let j in group.options) {
+                let option = group.options[j];
+                this.categories.mappings[option.value] = {type: option.type, filters: option.filters};
+            }
         }
 
         if (terms) {
