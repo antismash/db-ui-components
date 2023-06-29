@@ -40,6 +40,11 @@ export class AsdbQueryTerm extends LitElement {
         .expression {
             width: 40%;
         }
+        div.expression {
+            display: inline-block;
+            padding-left: 4px;
+            padding-right: 4px;
+        }
         button, .btn {
             display: inline-block;
             touch-action: manipulation;
@@ -164,6 +169,7 @@ export class AsdbQueryTerm extends LitElement {
 
     formCategoryChanged(ev) {
         this.terms.category = ev.target.value;
+        setTimeout(() => this.registerAutocompleteHandlers(), 10);
         this.termChanged();
         this.requestUpdate();
     }
@@ -262,7 +268,17 @@ export class AsdbQueryTerm extends LitElement {
     }
 
     renderTerm() {
-        return html`<input type="text" class="expression" placeholder="${this.terms.category == ""?"Select placeholder":""}" ?disabled="${this.terms.category == ""}" .value="${this.terms.value}" @change=${this.formTermChanged}>`;
+        let termType = this.categories.mappings[this.terms.category];
+        switch(termType?.type) {
+            case "bool":
+                return html`<div class="expression">is true</div>`;
+            case "text":
+                return html`<input type="text" class="expression" placeholder="Please enter value" .value="${this.terms.value}" @change=${this.formTermChanged}>`;
+            case "numeric":
+                return html`<input type="number" class="expression" .value="${this.terms.value}" @change=${this.formTermChanged}>`;
+            default:
+                return html`<input type="text" class="expression" placeholder="Select a category first" disabled>`;
+        }
     }
 
     renderExpression() {
@@ -303,6 +319,10 @@ export class AsdbQueryTerm extends LitElement {
     }
 
     firstUpdated() {
+        this.registerAutocompleteHandlers();
+    }
+
+    registerAutocompleteHandlers() {
         const inputs = this.shadowRoot.querySelectorAll(".expression");
         inputs.forEach(input => {
             autocomplete({
