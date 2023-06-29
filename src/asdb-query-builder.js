@@ -55,6 +55,9 @@ export class AsdbQueryBuilder extends LitElement {
     @internalProperty()
     downloadReturnTypes = new Set(['csv', 'fasta', 'fastaa']);
 
+    @internalProperty({type: Boolean})
+    show_text_mode = true;
+
     @internalProperty({type: Object})
     categories = {
         order: null,
@@ -364,6 +367,22 @@ export class AsdbQueryBuilder extends LitElement {
         this.offset = ev.target.value;
     }
 
+    toggleTextMode() {
+        this.show_text_mode = !this.show_text_mode;
+    }
+
+    async textModeUpdated(ev) {
+        let terms = ev.target.value;
+        let convertUrl = new URL("/api/v1.0/convert", window.location);
+        convertUrl.searchParams.set("search_string", terms);
+        let response = await fetch(convertUrl);
+        let query = await response.json();
+
+        this.query = query;
+        this.searchChanged();
+        this.requestUpdate();
+    }
+
     render() {
         return html`
         <div class="pattern-list ${this.state != 'input'?'hidden':''}">
@@ -399,6 +418,16 @@ export class AsdbQueryBuilder extends LitElement {
                         <label class="form-control" for="offset-input">Offset:</label>
                         <input id="offset-input" type="number" .value="${this.offset}" @change="${this.offsetChanged}"/>
                     </div>
+                </div>
+            </div>
+            <div>
+                <span @click=${this.toggleTextMode}>
+                    <svg class="icon ${this.show_text_mode ? '' : 'hidden'}"><use xlink:href="/images/icons.svg#chevron-down"></use></svg>
+                    <svg class="icon ${this.show_text_mode ? 'hidden' : ''}"><use xlink:href="/images/icons.svg#chevron-right"></use></svg>
+                    Text mode:
+                </span>
+                <div class="${this.show_text_mode ? '' : 'hidden'}">
+                    <input class="text-mode-input" .value='${this.query?stringifyTerm(this.query.terms):''}' @change="${this.textModeUpdated}">
                 </div>
             </div>
             <div class="button-group">
@@ -455,20 +484,7 @@ export class AsdbQueryBuilder extends LitElement {
             paginate = this.paginate;
         }
 
-        let categoriesUrl = new URL("/api/v1.0/available_categories", window.location);
-        let category_data = await fetch(categoriesUrl);
-        this.categories.order = await category_data.json();
-        for (let i in this.categories.order.options) {
-            let option = this.categories.order.options[i];
-            this.categories.mappings[option.value] = {type: option.type, filters: option.filters};
-        }
-        for (let i in this.categories.order.groups) {
-            let group = this.categories.order.groups[i];
-            for (let j in group.options) {
-                let option = group.options[j];
-                this.categories.mappings[option.value] = {type: option.type, filters: option.filters};
-            }
-        }
+        await this.populateCategories();
 
         if (terms) {
             let convertUrl = new URL("/api/v1.0/convert", window.location);
@@ -503,6 +519,23 @@ export class AsdbQueryBuilder extends LitElement {
             };
             this.paginate = paginate;
             this.offset = offset;
+        }
+    }
+
+    async populateCategories() {
+        let categoriesUrl = new URL("/api/v1.0/available_categories", window.location);
+        let category_data = await fetch(categoriesUrl);
+        this.categories.order = await category_data.json();
+        for (let i in this.categories.order.options) {
+            let option = this.categories.order.options[i];
+            this.categories.mappings[option.value] = { type: option.type, filters: option.filters };
+        }
+        for (let i in this.categories.order.groups) {
+            let group = this.categories.order.groups[i];
+            for (let j in group.options) {
+                let option = group.options[j];
+                this.categories.mappings[option.value] = { type: option.type, filters: option.filters };
+            }
         }
     }
 }
