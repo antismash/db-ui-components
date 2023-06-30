@@ -56,7 +56,7 @@ export class AsdbQueryBuilder extends LitElement {
     downloadReturnTypes = new Set(['csv', 'fasta', 'fastaa']);
 
     @internalProperty({type: Boolean})
-    show_text_mode = true;
+    show_text_mode = false;
 
     @internalProperty({type: Object})
     categories = {
