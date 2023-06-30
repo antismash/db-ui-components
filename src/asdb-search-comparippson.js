@@ -222,7 +222,7 @@ export class AsdbSearchComparippson extends LitElement {
             <td>${hit.q_acc}</td>
             <td>${hit.s_locus}</td>
             <td>${hit.identity}</td>
-            <td>${hit.s_acc}</td>
+            <td><a href="/area.html?record=${hit.s_acc}&start=${hit.s_rec_start}&end=${hit.s_rec_end}">${hit.s_acc}</a></td>
             <td>${hit.s_type}</td>
         </tr>
         `;
