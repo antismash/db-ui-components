@@ -135,6 +135,19 @@ export class AsdbSearchClusterblast extends LitElement {
         .example {
             margin-left: 25%;
         }
+        table {
+            margin: 0 auto;
+        }
+        tr:nth-child(even) {
+            background-color: #ddd;
+        }
+        td {
+            padding: 0.1em 0.25em;
+            margin: 0.2em 0.2em;
+        }
+        td.numeric {
+            text-align: right;
+        }
     `;
     }
 
@@ -220,8 +233,9 @@ export class AsdbSearchClusterblast extends LitElement {
         return html`
         <tr>
             <td>${hit.q_acc}</td>
-            <td>${hit.s_acc}</td>
-            <td>${hit.identity}</td>
+            <td>${hit.s_locus}</td>
+            <td class="numeric">${hit.identity}</td>
+            <td><a href="/area.html?record=${hit.s_acc}&start=${hit.s_rec_start}&end=${hit.s_rec_end}">${hit.s_acc}</a></td>
         </tr>
         `;
     }
@@ -235,6 +249,7 @@ export class AsdbSearchClusterblast extends LitElement {
                         <th>Query</th>
                         <th>Hit ID</th>
                         <th>% Identity</th>
+                        <th>Hit Record</th>
                     </tr>
                 </thead>
                 <tbody>
