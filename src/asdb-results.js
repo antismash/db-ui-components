@@ -100,7 +100,9 @@ export class AsdbResults extends LitElement {
                 <td class="digits">${region.start_pos}</td>
                 <td class="digits">${region.end_pos}</td>
                 <td>${region.contig_edge?'Yes':'No'}</td>
+                <!--
                 ${this.generateClusterBlastHits(region)}
+                -->
             </tr>
         `;
     }
@@ -117,9 +119,11 @@ export class AsdbResults extends LitElement {
                         <th>From</th>
                         <th>To</th>
                         <th>Edge</th>
+                        <!--
                         <th>Most similar MIBiG cluser</th>
                         <th>Similarity</th>
                         <th>MIBiG BGC-ID</th>
+                        -->
                     </tr>
                 </thead>
                 <tbody>
