@@ -568,6 +568,10 @@ function stringifyTerm(term) {
         return `{[${term.category}]}`;
     }
 
+    if (!term.filters) {
+        return `{[${term.category}|${term.value}]}`;
+    }
+
     return `{[${term.category}|${term.value}]${term.filters?.map((filter)=> {
         return ` WITH [${filter.name}|${filter.operator ? `${filter.operator}:`: ""}${filter.operand}]`
     })}}`;
