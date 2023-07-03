@@ -1,4 +1,4 @@
-import { customElement, LitElement, html, css } from 'lit-element';
+import { customElement, LitElement, html, css, internalProperty } from 'lit-element';
 
 import autocomplete from 'autocompleter';
 import 'autocompleter/autocomplete.css';
@@ -23,6 +23,9 @@ export class AsdbQueryTerm extends LitElement {
             },
         };
     }
+
+    @internalProperty({type: Boolean})
+    apply_filters = false;
 
     constructor() {
         super();
@@ -131,11 +134,15 @@ export class AsdbQueryTerm extends LitElement {
         asdb-query-term {
             width: 80%;
         }
+        .filter-item {
+            display: inline-block;
+            padding: 6px 12px;
+        }
         select {
             display: inline-block;
             width: auto;
             border: 1px solid #aaa;
-            padding: 6px 12px;
+            padding: 6px 20px 6px 12px;
             font-size: 14px;
             border-radius: 4px;
             -moz-appearance: none;
@@ -215,6 +222,60 @@ export class AsdbQueryTerm extends LitElement {
         this.requestUpdate();
     }
 
+    toggleFilters() {
+        this.apply_filters = !this.apply_filters;
+    }
+
+    addFilter() {
+        this.terms.filters = [...this.terms.filters, {
+            name: "",
+            operator: "",
+            operand: "",
+        }];
+        this.termChanged();
+        this.requestUpdate();
+    }
+
+    filterChanged(idx, value) {
+        this.terms.filters = this.terms.filters.map((filter, i) => {
+            if (i == idx) {
+                filter.name = value;
+            }
+            return filter;
+        });
+        this.termChanged();
+        this.requestUpdate();
+    }
+
+    removeFilter(idx) {
+        this.terms.filters = this.terms.filters.filter((_, i) => i !== idx);
+        this.termChanged();
+        this.requestUpdate();
+    }
+
+    operatorChanged(idx, value) {
+        this.terms.filters = this.terms.filters.map((filter, i) => {
+            if (i == idx) {
+                filter.operator = value;
+            }
+            return filter;
+        });
+        this.termChanged();
+        this.requestUpdate();
+    }
+
+
+    operandChanged(idx, value) {
+        this.terms.filters = this.terms.filters.map((filter, i) => {
+            if (i == idx) {
+                filter.operand = value;
+            }
+            return filter;
+        });
+        this.termChanged();
+        this.requestUpdate();
+    }
+
     termChanged() {
         let event = new CustomEvent('term-changed',{
             detail: {
@@ -267,6 +328,96 @@ export class AsdbQueryTerm extends LitElement {
         )}`
     }
 
+    filtersForCategory() {
+        let termType = this.categories.mappings[this.terms.category];
+        if (!termType || !termType.filters) {
+            return [];
+        }
+        return termType.filters;
+    }
+
+    renderFilterButton() {
+        if (this.filtersForCategory().length == 0) {
+            return '';
+        }
+        return html`
+            <label @click="${() => this.toggleFilters()}" class="btn ${this.apply_filters ?"active":""}"><svg class="icon"><use xlink:href="/images/icons.svg#filter"></use></svg>Filters</label>
+        `;
+    }
+
+    renderFilters() {
+        if (!this.apply_filters) {
+            return '';
+        }
+
+        let available = this.filtersForCategory();
+        let type_map = {};
+        available.map((opt) => type_map[opt.name] = {type: opt.type, labels: opt.labels});
+
+        return html`
+            <ul>
+                ${this.terms.filters.map((filter, idx) => html`
+                    ${this.renderFilter(idx)}
+                `)}
+                <li @click="${this.addFilter}">Add filter</li>
+            </ul>
+        `;
+    }
+
+    renderFilter(idx) {
+        let available = this.filtersForCategory();
+        let type_map = {};
+        available.map((opt) => type_map[opt.value] = {type: opt.type, labels: opt.choices});
+        return html`
+            <li>
+                <div class="filter-item">WITH</div>
+                <select .value="${this.terms.filters[idx].value}" @change="${(ev) => this.filterChanged(idx, ev.target.value)}">
+                    <option label="Select filter" value=""></option>
+                    ${available.map((opt) => html`<option .label="${opt.label}" .value="${opt.value}" ?selected="${this.terms.filters[idx].value == opt.value}">${opt.label}</option>`)}
+                </select>
+                ${this.renderFilterValue(idx, type_map)}
+                <button class="remove" @click="${() => this.removeFilter(idx)}"><svg class="icon"><use xlink:href="/images/icons.svg#trash"></use></svg> Remove filter</button>
+            </li>
+        `;
+
+    }
+
+    renderFilterValue(idx, type_map) {
+        let filter = this.terms.filters[idx];
+        switch(type_map[filter.name]?.type) {
+            case "numeric":
+                return html`
+                <select .value="${filter.operator}" @change="${(ev) => this.operatorChanged(idx, ev.target.value)}">
+                    <option label="pick one" value=""></option>
+                    <option label="greater than" value=">"></option>
+                    <option label="greater than or equal to" value=">="></option>
+                    <option label="equal to" value="="></option>
+                    <option label="less than or equal to" value="<="></option>
+                    <option label="less than" value="<">
+                </select>
+                ${this.renderNumericOperand(idx, type_map)}
+                `;
+            case "text":
+                return html`<input type="text" class="expression" .value="${filter.operand}" @change="${(ev) => this.operandChanged(idx, ev.target.value)}">`;
+            default:
+                return '';
+        }
+    }
+
+    renderNumericOperand(idx, type_map) {
+        let filter = this.terms.filters[idx];
+        let labels = type_map[filter.name]?.labels;
+        if (!labels) {
+            return html`<input type="number" class="expression" .value="${filter.operand}" @change="${(ev) => this.operandChanged(idx, ev.target.value)}">`;
+        }
+        return html`
+            <select class="expression" .value="${filter.operand}" @change="${(ev) => this.operandChanged(idx, ev.target.value)}">
+                <option label="pick one" value=""></option>
+                ${Object.entries(labels).map((it) => html`<option .label="${it[0]}" .value="${it[1]}" ?selected="${filter.operand == it[1]}">${it[0]}</option>`)}
+            </select>
+        `;
+    }
+
     renderTerm() {
         let termType = this.categories.mappings[this.terms.category];
         switch(termType?.type) {
@@ -286,6 +437,7 @@ export class AsdbQueryTerm extends LitElement {
             <div>
                 ${this.renderType()} ${this.renderTerm()}
                  <button @click=${this.addTerm}><svg class="icon"><use xlink:href="/images/icons.svg#plus"></use></svg> Add term</button>
+                 ${this.renderFilterButton()} ${this.renderFilters()}
             </div>
             `
     }
